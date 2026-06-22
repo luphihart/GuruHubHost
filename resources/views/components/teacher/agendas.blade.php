@@ -141,7 +141,7 @@ new class extends Component
         
         $agendas = $query->orderBy('date', 'desc')->orderBy('start_time')->get();
 
-        return view('components.teacher.⚡agendas', [
+        return view('components.teacher.agendas', [
             'agendasList' => $agendas,
         ]);
     }

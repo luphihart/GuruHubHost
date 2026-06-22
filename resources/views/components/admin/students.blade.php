@@ -186,7 +186,7 @@ new class extends Component
         $students = $query->orderBy('name')->get();
         $classes = SchoolClass::orderBy('name')->get();
 
-        return view('components.admin.⚡students', [
+        return view('components.admin.students', [
             'studentsList' => $students,
             'classesList' => $classes,
         ]);

@@ -172,7 +172,7 @@ new class extends Component
             }
         }
 
-        return view('components.teacher.⚡wali', [
+        return view('components.teacher.wali', [
             'mentorStudents' => $mentorStudents,
             'selectedMentorStudent' => $selectedMentorStudent,
             'notes' => $notes,

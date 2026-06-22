@@ -233,7 +233,7 @@ new class extends Component
         
         $teachers = $query->orderBy('name')->get();
 
-        return view('components.admin.⚡teachers', [
+        return view('components.admin.teachers', [
             'teachersList' => $teachers,
         ]);
     }

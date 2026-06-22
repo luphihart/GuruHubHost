@@ -174,7 +174,7 @@ new class extends Component
         $classes = SchoolClass::orderBy('name')->get();
         $subjects = Subject::orderBy('name')->get();
 
-        return view('components.admin.⚡schedules', [
+        return view('components.admin.schedules', [
             'schedulesList' => $schedules,
             'teachersList' => $teachers,
             'classesList' => $classes,
