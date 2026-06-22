@@ -407,98 +407,91 @@ new class extends Component
     </div>
 
     <!-- Add Case/Note Modal -->
+    <!-- Add Case/Note Modal -->
     @if ($showModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <!-- Overlay -->
-                <div class="fixed inset-0 bg-slate-600/50 bg-opacity-75 transition-opacity" aria-hidden="true" wire:click="$set('showModal', false)"></div>
+        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" wire:click.self="$set('showModal', false)">
+            <div class="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-100 transform transition-all">
+                <div class="p-6 space-y-4">
+                    <div class="flex justify-between items-center pb-3 border-b border-[#F1F5F9]">
+                        <h3 class="text-base font-black text-[#0F172A] font-display flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="h-5 w-5 text-[#4F46E5]"></i>
+                            Catat Kasus & Pembinaan Siswa
+                        </h3>
+                        <button wire:click="$set('showModal', false)" class="text-[#94A3B8] hover:text-[#475569]">
+                            <i data-lucide="x" class="h-5 w-5"></i>
+                        </button>
+                    </div>
 
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                <!-- Modal box -->
-                <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-100">
-                    <div class="p-6 space-y-4">
-                        <div class="flex justify-between items-center pb-3 border-b border-[#F1F5F9]">
-                            <h3 class="text-base font-black text-[#0F172A] font-display flex items-center gap-2">
-                                <i data-lucide="plus-circle" class="h-5 w-5 text-[#4F46E5]"></i>
-                                Catat Kasus & Pembinaan Siswa
-                            </h3>
-                            <button wire:click="$set('showModal', false)" class="text-[#94A3B8] hover:text-[#475569]">
-                                <i data-lucide="x" class="h-5 w-5"></i>
-                            </button>
+                    <form wire:submit.prevent="saveNote" class="space-y-4">
+                        <!-- Category -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Kategori Kasus</label>
+                            <select
+                                wire:model="category"
+                                class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] @error('category') border-rose-400 @enderror"
+                            >
+                                <option value="ACADEMIC">Akademik (Nilai, Pemahaman Materi)</option>
+                                <option value="ATTENDANCE">Kehadiran (Alpa, Terlambat, Cabut)</option>
+                                <option value="DISCIPLINE">Disiplin (Atribut, Perkelahian, Pelanggaran Aturan)</option>
+                                <option value="ACHIEVEMENT">Prestasi (Lomba, Pencapaian Positif)</option>
+                                <option value="COUNSELING">Konseling (Psikologis, Masalah Pribadi/Keluarga)</option>
+                                <option value="OTHER">Lainnya</option>
+                            </select>
+                            @error('category') <span class="text-rose-500 text-[10px] block mt-1 font-semibold">{{ $message }}</span> @enderror
                         </div>
 
-                        <form wire:submit.prevent="saveNote" class="space-y-4">
-                            <!-- Category -->
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Kategori Kasus</label>
-                                <select
-                                    wire:model="category"
-                                    class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] @error('category') border-rose-400 @enderror"
-                                >
-                                    <option value="ACADEMIC">Akademik (Nilai, Pemahaman Materi)</option>
-                                    <option value="ATTENDANCE">Kehadiran (Alpa, Terlambat, Cabut)</option>
-                                    <option value="DISCIPLINE">Disiplin (Atribut, Perkelahian, Pelanggaran Aturan)</option>
-                                    <option value="ACHIEVEMENT">Prestasi (Lomba, Pencapaian Positif)</option>
-                                    <option value="COUNSELING">Konseling (Psikologis, Masalah Pribadi/Keluarga)</option>
-                                    <option value="OTHER">Lainnya</option>
-                                </select>
-                                @error('category') <span class="text-rose-500 text-[10px] block mt-1 font-semibold">{{ $message }}</span> @enderror
-                            </div>
+                        <!-- Date -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Kejadian / Bimbingan</label>
+                            <input
+                                type="date"
+                                wire:model="date"
+                                class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] @error('date') border-rose-400 @enderror"
+                            />
+                            @error('date') <span class="text-rose-500 text-[10px] block mt-1 font-semibold">{{ $message }}</span> @enderror
+                        </div>
 
-                            <!-- Date -->
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Kejadian / Bimbingan</label>
-                                <input
-                                    type="date"
-                                    wire:model="date"
-                                    class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] @error('date') border-rose-400 @enderror"
-                                />
-                                @error('date') <span class="text-rose-500 text-[10px] block mt-1 font-semibold">{{ $message }}</span> @enderror
-                            </div>
+                        <!-- Case Content -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Catatan / Detail Masalah</label>
+                            <textarea
+                                wire:model="content"
+                                rows="4"
+                                placeholder="Jelaskan secara detail masalah siswa atau pencapaian yang terjadi..."
+                                class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] placeholder-[#94A3B8] @error('content') border-rose-400 @enderror"
+                            ></textarea>
+                            @error('content') <span class="text-rose-500 text-[10px] block mt-1 font-semibold">{{ $message }}</span> @enderror
+                        </div>
 
-                            <!-- Case Content -->
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Catatan / Detail Masalah</label>
-                                <textarea
-                                    wire:model="content"
-                                    rows="4"
-                                    placeholder="Jelaskan secara detail masalah siswa atau pencapaian yang terjadi..."
-                                    class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] placeholder-[#94A3B8] @error('content') border-rose-400 @enderror"
-                                ></textarea>
-                                @error('content') <span class="text-rose-500 text-[10px] block mt-1 font-semibold">{{ $message }}</span> @enderror
-                            </div>
+                        <!-- Action Taken -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tindak Lanjut / Solusi (Opsional)</label>
+                            <textarea
+                                wire:model="action_taken"
+                                rows="3"
+                                placeholder="Langkah penanganan yang diambil atau kesepakatan bersama siswa..."
+                                class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] placeholder-[#94A3B8] @error('action_taken') border-rose-400 @enderror"
+                            ></textarea>
+                            @error('action_taken') <span class="text-rose-500 text-[10px] block mt-1 font-semibold">{{ $message }}</span> @enderror
+                        </div>
 
-                            <!-- Action Taken -->
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tindak Lanjut / Solusi (Opsional)</label>
-                                <textarea
-                                    wire:model="action_taken"
-                                    rows="3"
-                                    placeholder="Langkah penanganan yang diambil atau kesepakatan bersama siswa..."
-                                    class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5] placeholder-[#94A3B8] @error('action_taken') border-rose-400 @enderror"
-                                ></textarea>
-                                @error('action_taken') <span class="text-rose-500 text-[10px] block mt-1 font-semibold">{{ $message }}</span> @enderror
-                            </div>
-
-                            <!-- Form Actions -->
-                            <div class="flex justify-end gap-2 pt-3 border-t border-[#F1F5F9]">
-                                <button
-                                    type="button"
-                                    wire:click="$set('showModal', false)"
-                                    class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    class="px-4 py-2 text-xs font-bold rounded-xl text-white bg-[#4F46E5] hover:bg-[#4338CA] transition-all shadow-md shadow-[#4F46E5]/10"
-                                >
-                                    Simpan Catatan
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        <!-- Form Actions -->
+                        <div class="flex justify-end gap-2 pt-3 border-t border-[#F1F5F9]">
+                            <button
+                                type="button"
+                                wire:click="$set('showModal', false)"
+                                class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="submit"
+                                class="px-4 py-2 text-xs font-bold rounded-xl text-white bg-[#4F46E5] hover:bg-[#4338CA] transition-all shadow-md shadow-[#4F46E5]/10"
+                            >
+                                Simpan Catatan
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
