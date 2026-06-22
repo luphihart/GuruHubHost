@@ -140,6 +140,92 @@ Agar fitur otomatisasi pembersihan logs notifikasi harian dan peringatan draft j
 
 ---
 
+## 🚀 Alternatif Deployment: Menggunakan cPanel Git Version Control & Otomatisasi `.cpanel.yml`
+
+Jika Anda ingin melakukan update kode secara langsung dari GitHub tanpa perlu mengunggah berkas `.zip` secara manual, Anda bisa menggunakan fitur **Git Version Control** di cPanel yang dikombinasikan dengan berkas otomatisasi **`.cpanel.yml`**.
+
+### ⚠️ PENTING: Kendala Utama Git Control & Solusinya (HTTP ERROR 500)
+Karena berkas inti Laravel ditarik langsung dari Git, ada beberapa folder/berkas penting yang **tidak ikut ter-pull** karena terdaftar di `.gitignore` (yaitu `.env`, `/vendor`, dan `/public/build`).
+
+Jika Anda tidak menyiapkannya dengan benar, website akan langsung menampilkan **HTTP ERROR 500 (Vite manifest not found / Class not found)** setelah ditarik dari Git. Ikuti langkah mitigasi wajib berikut:
+
+#### 1. Masalah Folder `public/build` (Aset CSS/JS)
+Folder `public/build` berisi hasil kompilasi CSS & JS serta file `manifest.json`. Karena folder ini secara default berada di `.gitignore`, Git tidak akan mengirimkannya ke GitHub, sehingga folder ini kosong di cPanel.
+
+*   **Solusi A (Direkomendasikan - Hapus dari `.gitignore`):**
+    Agar folder build ikut terunggah ke repositori Git Anda:
+    1. Buka file `.gitignore` di komputer lokal Anda.
+    2. Hapus atau beri komentar pada baris `/public/build` (tambahkan `#` di depannya menjadi `# /public/build`).
+    3. Di komputer lokal Anda, jalankan perintah build dan commit folder build tersebut ke GitHub:
+       ```bash
+       npm run build
+       git add .gitignore public/build/
+       git commit -m "chore: commit build assets for hosting"
+       git push origin main
+       ```
+    4. Setelah di-push, saat Anda melakukan **Pull/Update from Remote** di cPanel, berkas build akan masuk ke folder `guruhub_app/public/build` dan disalin otomatis ke `public_html/build` oleh `.cpanel.yml`.
+*   **Solusi B (Upload Manual):**
+    Jika Anda ingin tetap menyembunyikan folder build di Git:
+    1. Jalankan `npm run build` di komputer lokal Anda.
+    2. Kompres/ZIP folder `public/build` hasil kompilasi lokal Anda.
+    3. Unggah berkas ZIP tersebut ke File Manager cPanel, letakkan langsung di dalam folder `/home/username/public_html/` lalu ekstrak (sehingga strukturnya menjadi `/home/username/public_html/build`). Anda harus mengulang langkah ini setiap kali ada perubahan file CSS/JS.
+
+#### 2. Masalah File `.env` (Konfigurasi Database & Environment)
+File `.env` tidak pernah dimasukkan ke Git demi keamanan.
+1. Di cPanel File Manager, masuk ke `/home/username/guruhub_app/`.
+2. Buat file baru bernama `.env`.
+3. Salin isi dari `.env.example` ke file `.env` baru tersebut.
+4. Sunting file `.env` dan masukkan konfigurasi database & APP_URL Anda (seperti pada **Langkah 6**).
+5. Masuk ke Terminal cPanel, jalankan perintah ini untuk men-generate key aplikasi:
+   ```bash
+   php artisan key:generate
+   ```
+
+#### 3. Masalah Folder `vendor/` (Dependensi Composer)
+Folder `vendor/` berisi semua library PHP (termasuk library import Excel). Folder ini tidak masuk Git.
+1. Masuk ke Terminal cPanel.
+2. Jalankan perintah berikut untuk mengunduh Composer lokal dan menginstal library tanpa memicu error `proc_open` (baca selengkapnya di **Langkah 8**):
+   ```bash
+   cd /home/username/guruhub_app
+   curl -sS https://getcomposer.org/installer | php
+   /usr/local/bin/ea-php82 composer.phar install --no-dev --no-scripts
+   ```
+
+---
+
+### 1. Cara Kerja Otomatisasi
+Di dalam repositori ini terdapat berkas konfigurasi khusus **`.cpanel.yml`**:
+```yaml
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/username/public_html/
+    - /bin/cp -R public/* $DEPLOYPATH
+```
+*Catatan: Pastikan Anda telah mengubah `username` (misal: `sina4714`) sesuai dengan nama user cPanel Anda.*
+
+Ketika Anda menekan tombol **Deploy** di cPanel, sistem cPanel secara otomatis akan menyalin semua aset publik (berkas `.htaccess`, `index.php`, dan folder `build` hasil kompilasi Vite) dari repositori inti ke dalam folder `public_html/` Anda.
+
+### 2. Langkah-Langkah Penyiapan (Setup) Awal
+1. Masuk ke **cPanel > Git Version Control**.
+2. Klik tombol **Create** (Buat).
+3. Lengkapi formulir pembuatan:
+   * **Clone URL**: `https://github.com/luphihart/GuruHubHost.git` (atau URL repositori GitHub Anda).
+   * **File Path**: `/home/username/guruhub_app` (folder inti di luar `public_html`).
+   * **Repository Name**: `guruhub_app`
+4. Klik **Create**. cPanel akan mengkloning seluruh kode Anda ke direktori tersebut.
+
+### 3. Cara Melakukan Update Kode (Sync) di Masa Depan
+1. Setelah Anda meng-push perubahan baru ke GitHub dari komputer lokal.
+2. Masuk ke **cPanel > Git Version Control**.
+3. Klik **Manage** pada repositori `guruhub_app`.
+4. Klik tab **Pull or Deploy**.
+5. Klik **Update from Remote** untuk menarik (*pull*) kode terbaru dari GitHub.
+6. Klik **Deploy Head Commit** untuk memicu tugas `.cpanel.yml` agar otomatis menyalin aset folder `public` terbaru ke `public_html`.
+7. Terakhir, jalankan perintah instalasi dependensi jika ada library baru (seperti di **Langkah 8**) dan bersihkan cache rute Laravel di Terminal cPanel.
+
+---
+
 ## ⚡ Optimalisasi & Penanganan Masalah (Troubleshooting)
 
 1. **Error 500 (Internal Server Error)**:
