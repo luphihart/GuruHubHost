@@ -11,7 +11,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Dynamically bind public path if public_html exists as a sibling directory (cPanel environment)
+        $publicHtmlPath = base_path('../public_html');
+        if (file_exists($publicHtmlPath) && is_dir($publicHtmlPath)) {
+            $this->app->usePublicPath($publicHtmlPath);
+        }
     }
 
     /**
