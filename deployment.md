@@ -242,3 +242,31 @@ Ketika Anda menekan tombol **Deploy** di cPanel, sistem cPanel secara otomatis a
    ```bash
    php artisan cache:clear && php artisan config:clear && php artisan view:clear
    ```
+
+---
+
+## 🔒 Konfigurasi SSL & HTTPS (Keamanan Koneksi)
+
+Untuk mengaktifkan protokol aman HTTPS di hosting cPanel Anda:
+
+### 1. Mengaktifkan AutoSSL Gratis di cPanel
+Sebagian besar shared hosting seperti RumahWeb, Niagahoster, dll. menyediakan SSL gratis dari Let's Encrypt atau Sectigo.
+1. Masuk ke **cPanel** Anda.
+2. Cari dan buka menu **SSL/TLS Status**.
+3. Centang nama domain Anda (misal: `sinaumedia.my.id` dan `www.sinaumedia.my.id`).
+4. Klik tombol **Run AutoSSL**.
+5. Tunggu sekitar 2-5 menit hingga ikon gembok di samping domain berubah menjadi hijau (valid).
+
+### 2. Memaksa Pengalihan HTTP ke HTTPS (Force HTTPS)
+Agar seluruh pengunjung otomatis dialihkan ke versi aman (HTTPS):
+*   **Melalui file `.htaccess` (Sangat Direkomendasikan):**
+    Buka berkas `/home/username/public_html/.htaccess` Anda di File Manager cPanel, lalu tambahkan baris berikut tepat di bawah baris `RewriteEngine On`:
+    ```apache
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    ```
+*   **Melalui Laravel (Otomatis):**
+    Sistem GuruHub sudah diprogram untuk memaksa HTTPS secara otomatis di sisi server ketika `APP_ENV=production` aktif. Anda hanya perlu memastikan nilai di berkas `.env` sudah menggunakan `https://`:
+    ```env
+    APP_URL=https://sinaumedia.my.id
+    ```
