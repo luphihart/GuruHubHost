@@ -35,6 +35,9 @@ Route::middleware(['auth', 'role:ADMIN'])->prefix('admin')->group(function () {
     Route::livewire('/classes', 'admin.classes')->name('admin.classes');
     Route::livewire('/subjects', 'admin.subjects')->name('admin.subjects');
     Route::livewire('/schedules', 'admin.schedules')->name('admin.schedules');
+    Route::livewire('/school-years', 'admin.school-years')->name('admin.school-years');
+    Route::livewire('/perwalian', 'admin.perwalian')->name('admin.perwalian');
+    Route::get('/students/import-template', [\App\Http\Controllers\StudentImportController::class, 'downloadTemplate'])->name('admin.students.import-template');
     Route::livewire('/school-profile', 'admin.school-profile')->name('admin.school-profile');
     Route::livewire('/account', 'common.account-settings')->name('admin.account');
 });

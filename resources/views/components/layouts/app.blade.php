@@ -75,6 +75,14 @@
                                     <i data-lucide="building" class="mr-3 h-5 w-5 {{ request()->routeIs('admin.school-profile') ? 'text-[#4F46E5]' : 'text-slate-400 group-hover:text-slate-500' }}"></i>
                                     Profil Sekolah
                                 </a>
+                                <a href="{{ route('admin.school-years') }}" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('admin.school-years') ? 'bg-[#4F46E5]/10 text-[#4F46E5]' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                    <i data-lucide="calendar-days" class="mr-3 h-5 w-5 {{ request()->routeIs('admin.school-years') ? 'text-[#4F46E5]' : 'text-slate-400 group-hover:text-slate-500' }}"></i>
+                                    Tahun Pelajaran
+                                </a>
+                                <a href="{{ route('admin.perwalian') }}" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('admin.perwalian') ? 'bg-[#4F46E5]/10 text-[#4F46E5]' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                    <i data-lucide="heart-handshake" class="mr-3 h-5 w-5 {{ request()->routeIs('admin.perwalian') ? 'text-[#4F46E5]' : 'text-slate-400 group-hover:text-slate-500' }}"></i>
+                                    Penetapan Perwalian
+                                </a>
                                 <a href="{{ route('admin.account') }}" class="group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all {{ request()->routeIs('admin.account') ? 'bg-[#4F46E5]/10 text-[#4F46E5]' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                     <i data-lucide="settings" class="mr-3 h-5 w-5 {{ request()->routeIs('admin.account') ? 'text-[#4F46E5]' : 'text-slate-400 group-hover:text-slate-500' }}"></i>
                                     Pengaturan Akun
@@ -250,6 +258,14 @@
                             <a href="{{ route('admin.school-profile') }}" class="group flex items-center px-3 py-2.5 text-base font-medium rounded-xl {{ request()->routeIs('admin.school-profile') ? 'bg-[#4F46E5]/10 text-[#4F46E5]' : 'text-slate-600 hover:bg-slate-50' }}">
                                 <i data-lucide="building" class="mr-4 h-6 w-6 text-slate-500"></i>
                                 Profil Sekolah
+                            </a>
+                            <a href="{{ route('admin.school-years') }}" class="group flex items-center px-3 py-2.5 text-base font-medium rounded-xl {{ request()->routeIs('admin.school-years') ? 'bg-[#4F46E5]/10 text-[#4F46E5]' : 'text-slate-600 hover:bg-slate-50' }}">
+                                <i data-lucide="calendar-days" class="mr-4 h-6 w-6 text-slate-500"></i>
+                                Tahun Pelajaran
+                            </a>
+                            <a href="{{ route('admin.perwalian') }}" class="group flex items-center px-3 py-2.5 text-base font-medium rounded-xl {{ request()->routeIs('admin.perwalian') ? 'bg-[#4F46E5]/10 text-[#4F46E5]' : 'text-slate-600 hover:bg-slate-50' }}">
+                                <i data-lucide="heart-handshake" class="mr-4 h-6 w-6 text-slate-500"></i>
+                                Penetapan Perwalian
                             </a>
                             <a href="{{ route('admin.account') }}" class="group flex items-center px-3 py-2.5 text-base font-medium rounded-xl {{ request()->routeIs('admin.account') ? 'bg-[#4F46E5]/10 text-[#4F46E5]' : 'text-slate-600 hover:bg-slate-50' }}">
                                 <i data-lucide="settings" class="mr-4 h-6 w-6 text-slate-500"></i>

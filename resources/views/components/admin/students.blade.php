@@ -4,9 +4,13 @@ use Livewire\Component;
 use App\Models\Student;
 use App\Models\SchoolClass;
 use Illuminate\Support\Facades\DB;
+use Livewire\WithFileUploads;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 new class extends Component
 {
+    use WithFileUploads;
+
     public $searchQuery = '';
     
     // Modal states
@@ -22,6 +26,12 @@ new class extends Component
     public $class_id = '';
     public $parent_name = '';
     public $parent_phone = '';
+    
+    // Excel Import states
+    public $showImportModal = false;
+    public $importFile = null;
+    public $importErrors = [];
+    public $importSuccessCount = 0;
     
     // Toast state
     public $feedbackType = '';
@@ -171,6 +181,131 @@ new class extends Component
         return $clean;
     }
 
+    public function openImportModal()
+    {
+        $this->resetValidation();
+        $this->importFile = null;
+        $this->importErrors = [];
+        $this->importSuccessCount = 0;
+        $this->showImportModal = true;
+        $this->dispatch('init-lucide');
+    }
+
+    public function importStudents()
+    {
+        $this->validate([
+            'importFile' => 'required|file|mimes:xlsx,xls|max:10240',
+        ]);
+
+        $this->importErrors = [];
+        $this->importSuccessCount = 0;
+        $errors = [];
+        $successCount = 0;
+
+        try {
+            $path = $this->importFile->getRealPath();
+            $spreadsheet = IOFactory::load($path);
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray();
+
+            if (count($rows) < 2) {
+                $this->showFeedback('error', 'Berkas Excel kosong atau tidak memiliki baris data.');
+                return;
+            }
+
+            DB::transaction(function() use ($rows, &$errors, &$successCount) {
+                $classesMap = SchoolClass::all()->pluck('id', 'name')->toArray();
+                $normalizedClassesMap = [];
+                foreach ($classesMap as $className => $classId) {
+                    $normalizedClassesMap[strtolower(trim($className))] = $classId;
+                }
+
+                for ($i = 1; $i < count($rows); $i++) {
+                    $row = $rows[$i];
+                    if (empty(array_filter($row))) {
+                        continue;
+                    }
+
+                    $nis = isset($row[0]) ? trim((string)$row[0]) : '';
+                    $nisn = isset($row[1]) ? trim((string)$row[1]) : '';
+                    $name = isset($row[2]) ? trim((string)$row[2]) : '';
+                    $genderInput = isset($row[3]) ? trim((string)$row[3]) : '';
+                    $classNameInput = isset($row[4]) ? trim((string)$row[4]) : '';
+                    $parentName = isset($row[5]) ? trim((string)$row[5]) : '';
+                    $parentPhone = isset($row[6]) ? trim((string)$row[6]) : '';
+
+                    $rowNum = $i + 1;
+
+                    if (empty($nis)) {
+                        $errors[] = "Baris {$rowNum}: NIS tidak boleh kosong.";
+                        continue;
+                    }
+                    if (empty($nisn)) {
+                        $errors[] = "Baris {$rowNum}: NISN tidak boleh kosong.";
+                        continue;
+                    }
+                    if (empty($name)) {
+                        $errors[] = "Baris {$rowNum}: Nama Lengkap tidak boleh kosong.";
+                        continue;
+                    }
+
+                    $gender = 'MALE';
+                    $gLower = strtolower($genderInput);
+                    if ($gLower === 'l' || $gLower === 'laki-laki' || $gLower === 'laki laki' || $gLower === 'male') {
+                        $gender = 'MALE';
+                    } elseif ($gLower === 'p' || $gLower === 'perempuan' || $gLower === 'female') {
+                        $gender = 'FEMALE';
+                    } else {
+                        $errors[] = "Baris {$rowNum}: Jenis Kelamin '{$genderInput}' tidak valid. Gunakan L/P.";
+                        continue;
+                    }
+
+                    $classKey = strtolower(trim($classNameInput));
+                    if (!isset($normalizedClassesMap[$classKey])) {
+                        $errors[] = "Baris {$rowNum}: Kelas '{$classNameInput}' tidak ditemukan di database.";
+                        continue;
+                    }
+                    $classId = $normalizedClassesMap[$classKey];
+
+                    if (Student::where('nis', $nis)->exists()) {
+                        $errors[] = "Baris {$rowNum}: NIS '{$nis}' sudah terdaftar.";
+                        continue;
+                    }
+
+                    if (Student::where('nisn', $nisn)->exists()) {
+                        $errors[] = "Baris {$rowNum}: NISN '{$nisn}' sudah terdaftar.";
+                        continue;
+                    }
+
+                    $normalizedPhone = $this->normalizePhone($parentPhone);
+
+                    Student::create([
+                        'nis' => $nis,
+                        'nisn' => $nisn,
+                        'name' => $name,
+                        'gender' => $gender,
+                        'class_id' => $classId,
+                        'parent_name' => $parentName ?: '-',
+                        'parent_phone' => $normalizedPhone ?: '6281234567890',
+                    ]);
+
+                    $successCount++;
+                }
+
+                if (!empty($errors)) {
+                    throw new \Exception("Ada kesalahan pada baris data.");
+                }
+            });
+
+            $this->importSuccessCount = $successCount;
+            $this->showImportModal = false;
+            $this->showFeedback('success', "Berhasil mengimpor {$successCount} data murid.");
+        } catch (\Exception $e) {
+            $this->importErrors = $errors ?: [$e->getMessage()];
+            $this->showFeedback('error', 'Gagal memproses berkas Excel. Silakan periksa daftar kesalahan.');
+        }
+    }
+
     public function render()
     {
         $query = Student::with('class');
@@ -204,13 +339,23 @@ new class extends Component
             <h2 class="text-2xl font-black text-[#0F172A] tracking-tight font-display">Data Murid</h2>
         </div>
         
-        <button
-            wire:click="openAddModal"
-            class="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-2xl text-white bg-[#4F46E5] hover:bg-[#4338CA] transition-all shadow-md shadow-[#4F46E5]/10 hover:scale-[1.01]"
-        >
-            <i data-lucide="plus" class="h-4 w-4"></i>
-            Tambah Murid Baru
-        </button>
+        <div class="flex items-center gap-2">
+            <button
+                wire:click="openImportModal"
+                class="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-2xl text-[#4F46E5] bg-[#4F46E5]/10 hover:bg-[#4F46E5]/20 transition-all hover:scale-[1.01]"
+            >
+                <i data-lucide="file-spreadsheet" class="h-4 w-4"></i>
+                Impor Murid
+            </button>
+            
+            <button
+                wire:click="openAddModal"
+                class="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-2xl text-white bg-[#4F46E5] hover:bg-[#4338CA] transition-all shadow-md shadow-[#4F46E5]/10 hover:scale-[1.01]"
+            >
+                <i data-lucide="plus" class="h-4 w-4"></i>
+                Tambah Murid Baru
+            </button>
+        </div>
     </div>
 
     <!-- Feedback Toast -->
@@ -420,6 +565,93 @@ new class extends Component
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- Import Murid Modal -->
+    @if ($showImportModal)
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" wire:click.self="$set('showImportModal', false)">
+            <div class="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden border border-[#E2E8F0] flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+                <div class="p-6 border-b border-[#E2E8F0] flex items-center justify-between">
+                    <h3 class="text-base font-bold text-[#0F172A] font-display flex items-center gap-2">
+                        <i data-lucide="file-spreadsheet" class="h-5 w-5 text-[#4F46E5]"></i>
+                        Impor Data Murid via Excel
+                    </h3>
+                    <button
+                        wire:click="$set('showImportModal', false)"
+                        class="p-1.5 hover:bg-[#F8FAFC] rounded-xl text-[#64748B] hover:text-[#0F172A] transition-colors"
+                    >
+                        <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                </div>
+
+                <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+                    <!-- Step 1: Unduh Template -->
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3">
+                        <div class="p-2.5 bg-[#4F46E5]/10 text-[#4F46E5] rounded-xl shrink-0">
+                            <i data-lucide="download" class="h-5 w-5"></i>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="text-xs font-bold text-[#0F172A]">1. Unduh Template Excel</h4>
+                            <p class="text-[10px] text-[#64748B] leading-relaxed">Gunakan template resmi kami agar format NIS, NISN, dan Nama Kelas sesuai dengan database.</p>
+                            <a
+                                href="{{ route('admin.students.import-template') }}"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold rounded-lg text-[#4F46E5] bg-[#4F46E5]/10 hover:bg-[#4F46E5]/20 transition-all"
+                            >
+                                Unduh Template (.xlsx)
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Unggah File -->
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-bold text-[#0F172A]">2. Pilih Berkas Excel (.xlsx)</h4>
+                        <input
+                            type="file"
+                            wire:model="importFile"
+                            accept=".xlsx, .xls"
+                            class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/20 focus:border-[#4F46E5]"
+                        />
+                        @error('importFile') <span class="text-rose-500 text-[10px] block mt-1 font-semibold">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Errors list if any -->
+                    @if (!empty($importErrors))
+                        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-800 space-y-2">
+                            <h5 class="text-xs font-bold flex items-center gap-1.5">
+                                <i data-lucide="alert-triangle" class="h-4.5 w-4.5 text-rose-600"></i>
+                                Gagal mengimpor data. Ditemukan {{ count($importErrors) }} kesalahan:
+                            </h5>
+                            <ul class="text-[10px] list-disc list-inside max-h-40 overflow-y-auto space-y-1 font-mono">
+                                @foreach ($importErrors as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <p class="text-[9px] text-[#94A3B8] italic">Catatan: Transaksi dibatalkan secara otomatis. Tidak ada data yang dimasukkan ke database hingga semua kesalahan diperbaiki.</p>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="p-4 border-t border-[#F1F5F9] flex justify-end gap-2 bg-white px-6">
+                    <button
+                        type="button"
+                        wire:click="$set('showImportModal', false)"
+                        class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="importStudents"
+                        wire:loading.attr="disabled"
+                        class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl text-white bg-[#4F46E5] hover:bg-[#4338CA] transition-colors disabled:opacity-50"
+                    >
+                        <i data-lucide="upload" class="h-4 w-4"></i>
+                        <span wire:loading.remove>Proses Impor</span>
+                        <span wire:loading>Memproses...</span>
+                    </button>
+                </div>
             </div>
         </div>
     @endif
