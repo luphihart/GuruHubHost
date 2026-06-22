@@ -61,14 +61,11 @@ new class extends Component
                 $students = Student::where('class_id', $this->selectedClassId)->get();
                 
                 foreach ($students as $student) {
-                    // Check if already assigned, if yes, delete first (to satisfy unique index and reassign)
-                    MentorStudent::where('student_id', $student->id)->delete();
-                    
-                    // Create new assignment
-                    MentorStudent::create([
-                        'teacher_id' => $this->selectedTeacherId,
-                        'student_id' => $student->id,
-                    ]);
+                    // Use updateOrCreate to preserve UUID and prevent cascading delete of mentoring notes
+                    MentorStudent::updateOrCreate(
+                        ['student_id' => $student->id],
+                        ['teacher_id' => $this->selectedTeacherId]
+                    );
                 }
             });
 
@@ -99,12 +96,11 @@ new class extends Component
         try {
             DB::transaction(function() {
                 foreach ($this->selectedStudentIds as $studentId) {
-                    MentorStudent::where('student_id', $studentId)->delete();
-                    
-                    MentorStudent::create([
-                        'teacher_id' => $this->selectedTeacherId,
-                        'student_id' => $studentId,
-                    ]);
+                    // Use updateOrCreate to preserve UUID and prevent cascading delete of mentoring notes
+                    MentorStudent::updateOrCreate(
+                        ['student_id' => $studentId],
+                        ['teacher_id' => $this->selectedTeacherId]
+                    );
                 }
             });
 
