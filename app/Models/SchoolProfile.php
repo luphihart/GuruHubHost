@@ -19,6 +19,7 @@ class SchoolProfile extends Model
         'phone',
         'email',
         'website',
+        'city',
         'headmaster',
         'headmaster_nip',
     ];

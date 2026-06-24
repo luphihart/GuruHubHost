@@ -252,7 +252,7 @@
                     NIP. {{ $schoolProfile->headmaster_nip }}
                 </td>
                 <td>
-                    Bandung, {{ now()->format('d M Y') }}<br/>
+                    {{ $schoolProfile->city ?? 'Bandung' }}, {{ now()->format('d M Y') }}<br/>
                     Guru Wali / Pembina
                     <div class="signature-space"></div>
                     <span style="font-weight: bold; text-decoration: underline;">{{ $mentorStudent->teacher->name }}</span><br/>

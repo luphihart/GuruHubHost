@@ -12,6 +12,7 @@ new class extends Component
     public $phone = '';
     public $email = '';
     public $website = '';
+    public $city = '';
     public $headmaster = '';
     public $headmaster_nip = '';
     
@@ -26,6 +27,7 @@ new class extends Component
         'phone' => 'nullable|string|max:50',
         'email' => 'nullable|email|max:100',
         'website' => 'nullable|string|max:100',
+        'city' => 'required|string|max:100',
         'headmaster' => 'required|string|max:255',
         'headmaster_nip' => 'required|string|max:50',
     ];
@@ -40,6 +42,7 @@ new class extends Component
             $this->phone = $profile->phone;
             $this->email = $profile->email;
             $this->website = $profile->website;
+            $this->city = $profile->city ?? '';
             $this->headmaster = $profile->headmaster;
             $this->headmaster_nip = $profile->headmaster_nip;
         }
@@ -67,6 +70,7 @@ new class extends Component
                     'phone' => $this->phone,
                     'email' => $this->email,
                     'website' => $this->website,
+                    'city' => $this->city,
                     'headmaster' => $this->headmaster,
                     'headmaster_nip' => $this->headmaster_nip,
                 ]
@@ -141,6 +145,18 @@ new class extends Component
                     class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#4F46E5] focus:border-[#4F46E5] transition-all"
                 ></textarea>
                 @error('address') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-[#0F172A]">KOTA / KABUPATEN (UNTUK TTD PDF)</label>
+                <input
+                    type="text"
+                    required
+                    placeholder="e.g. Bandung"
+                    wire:model="city"
+                    class="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-3 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#4F46E5] focus:border-[#4F46E5] transition-all"
+                />
+                @error('city') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
             </div>
 
             <div class="grid grid-cols-2 gap-4">
